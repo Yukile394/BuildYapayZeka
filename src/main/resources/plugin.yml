@@ -1,0 +1,17 @@
+name: BuildYapayZeka
+main: com.buildyapayzeka.BuildYapayZeka
+version: 1.0.0
+api-version: '1.21'
+author: BuildYapayZeka
+description: Oyuncu gibi görünen, sohbetten yapı inşa eden yapay zeka botu.
+commands:
+  buildyapayzeka:
+    description: Botu aç/kapat
+    usage: /BuildYapayZeka <aktif|kapat>
+    aliases: [byz]
+  bot:
+    description: Bota inşa isteği ver
+    usage: /bot <istek | geri | iptal>
+permissions:
+  buildyapayzeka.use:
+    default: op

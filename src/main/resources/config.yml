@@ -1,0 +1,8 @@
+# Anthropic API anahtarı. Boş bırakırsan hazır şablonlar (spawn, arena, 1v1) kullanılır.
+anthropic-api-key: ""
+model: "claude-sonnet-5-5"
+bot-name: "BuildYapayZeka"
+bot-skin: "Notch"        # Mannequin olmayan sürümlerde kafa skini
+blocks-per-tick: 400
+max-blocks: 250000
+max-ops: 700
