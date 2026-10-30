@@ -18,7 +18,7 @@ public class BuildYapayZeka extends JavaPlugin {
         bot = new BotManager(this);
         builder = new Builder(this);
         ai = new AIClient(this);
-        if (!ai.hasKey()) getLogger().warning("anthropic-api-key boş: hazır şablonlar kullanılacak (her istekte aynı yapı çıkar!).");
+        if (!ai.hasKey()) getLogger().info("anthropic-api-key boş: API'siz üretici kullanılacak (spawn, arena, 1v1, ada, kale).");
     }
 
     @Override public void onDisable() { if (bot != null) bot.deactivate(); }
@@ -50,7 +50,7 @@ public class BuildYapayZeka extends JavaPlugin {
         if (a[0].equalsIgnoreCase("geri")) { builder.undo(p); return true; }
         if (a[0].equalsIgnoreCase("iptal")) { builder.cancel(); return true; }
         if (a[0].equalsIgnoreCase("durum")) {
-            bot.say("API anahtarı: " + (ai.hasKey() ? "VAR (yapay zeka kullanılacak)" : "YOK (sabit şablon kullanılır, hep aynı çıkar)")
+            bot.say("API anahtarı: " + (ai.hasKey() ? "VAR (yapay zeka kullanılacak)" : "YOK (ücretsiz üretici kullanılır)")
                     + " | model: " + getConfig().getString("model", "claude-sonnet-5-5")
                     + " | max-zones: " + getConfig().getInt("max-zones", 8)
                     + " | fallback-templates: " + getConfig().getBoolean("fallback-templates", false));
@@ -71,15 +71,15 @@ public class BuildYapayZeka extends JavaPlugin {
                         getLogger().warning("AI hatası: " + e);
                         bot.say("AI hatası: " + e.getMessage());
                         if (!getConfig().getBoolean("fallback-templates", false)) {
-                            bot.say("Hiçbir şey inşa edilmedi. (Hazır şablonu istersen config.yml'de fallback-templates: true yap.)");
+                            bot.say("Hiçbir şey inşa edilmedi. (Üreticiyi istersen config.yml'de fallback-templates: true yap.)");
                             return;
                         }
-                        bot.say("Hazır şablon kullanılıyor.");
-                        plan = Templates.plan(prompt);
+                        bot.say("Ücretsiz üretici kullanılıyor.");
+                        plan = ProceduralGen.plan(prompt);
                     }
                 } else {
-                    bot.say("anthropic-api-key BOŞ! Hazır şablon kullanılıyor (isteğe göre değişmez). config.yml'e anahtarını yaz.");
-                    plan = Templates.plan(prompt);
+                    bot.say("API anahtarı yok: ücretsiz üreticiyi kullanıyorum. Anahtar kelimeler: spawn, arena, 1v1, ada, kale.");
+                    plan = ProceduralGen.plan(prompt);
                 }
                 Expander.Result res = Expander.expand(plan.ops(), Builder.expandConfig(this));
                 String msg = plan.message();
@@ -97,4 +97,4 @@ public class BuildYapayZeka extends JavaPlugin {
         if (!s.isOp() || a.length != 1) return List.of();
         return c.getName().equals("buildyapayzeka") ? List.of("aktif", "kapat") : List.of("geri", "iptal", "durum");
     }
-}
+                            }
