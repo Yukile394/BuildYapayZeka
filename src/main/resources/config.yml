@@ -1,8 +1,21 @@
-# Anthropic API anahtarı. Boş bırakırsan hazır şablonlar (spawn, arena, 1v1) kullanılır.
+# Anthropic API anahtarı. BOŞSA hazır şablonlar kullanılır ve her istekte AYNI yapı çıkar!
 anthropic-api-key: ""
-model: "claude-sonnet-5-5"
+model: "claude-sonnet-5-5"       # daha kaliteli: "claude-opus-5-5" (daha yavaş/pahalı)
 bot-name: "BuildYapayZeka"
-bot-skin: "Notch"        # Mannequin olmayan sürümlerde kafa skini
+bot-skin: "Notch"                # Mannequin olmayan sürümlerde kafa skini
+
+# --- Yapay zeka planlama ---
+max-zones: 8                     # mimar en fazla kaç bölge planlasın (çok = daha detaylı, daha pahalı)
+zones-parallel: 3                # aynı anda kaç bölge üretilsin (429 hatası alırsan 1-2 yap)
+max-ops-per-zone: 450            # bölge başına komut sınırı
+max-ops: 4000                    # toplam komut sınırı
+max-tokens: 16000                # bölge başına cevap uzunluğu
+auto-clear: true                 # inşaat alanını (y>=1) önce temizle
+fallback-templates: false        # AI hata verirse sabit şablon kurulsun mu? (false = hiçbir şey kurma, hatayı göster)
+
+# --- İnşaat ---
 blocks-per-tick: 400
 max-blocks: 250000
-max-ops: 700
+max-radius: 80                   # merkezden x/z uzaklığı sınırı
+min-y: -40                       # zeminden aşağı (yüzen ada altı için)
+max-y: 90                        # zeminden yukarı

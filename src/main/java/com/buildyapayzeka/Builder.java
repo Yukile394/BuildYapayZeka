@@ -10,7 +10,6 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 public class Builder {
-    record P(int x, int y, int z, Material m) {}
     record U(int x, int y, int z, BlockData d) {}
 
     private static final Set<Material> BANNED = EnumSet.of(Material.COMMAND_BLOCK, Material.CHAIN_COMMAND_BLOCK,
@@ -30,40 +29,85 @@ public class Builder {
 
     public boolean busy() { return task != null; }
 
-    public void start(Player p, Location o, Plan plan) {
+    /** Expander ayarı: fence/duvar/cam bağlantıları için gerçek blok bilgisini kullanır. */
+    public static Expander.Config expandConfig(BuildYapayZeka pl) {
+        Expander.Config c = new Expander.Config();
+        c.radius = pl.getConfig().getInt("max-radius", 80);
+        c.minY = pl.getConfig().getInt("min-y", -40);
+        c.maxY = pl.getConfig().getInt("max-y", 90);
+        c.maxBlocks = pl.getConfig().getInt("max-blocks", 250000);
+        c.seed = (int) (System.nanoTime() & 0x7fffffff);
+        c.solid = base -> {
+            Material m = Material.matchMaterial(base);
+            return m != null && m.isBlock() && m.isOccluding();
+        };
+        return c;
+    }
+
+    /** Ana iş parçacığında çağrılır. Blok listesi (Expander sonucu) zaten hazırdır. */
+    public void start(Player p, Location o, String message, Expander.Result res) {
         if (busy()) { pl.bot.say("Şu an başka bir inşaat yapıyorum, /bot iptal ile durdurabilirsin."); return; }
-        int max = pl.getConfig().getInt("max-blocks", 250000);
-        List<P> blocks = expand(plan.ops(), max);
-        if (blocks.isEmpty()) { pl.bot.say("Geçerli bir plan oluşturamadım, isteği farklı anlatır mısın?"); return; }
-        pl.bot.say(plan.message() + " (" + blocks.size() + " blok)");
+        if (res.solidCount == 0) { pl.bot.say("Geçerli bir plan oluşturamadım, isteği farklı anlatır mısın?"); return; }
+
+        // palet -> BlockData (bir kez, ana thread'de)
+        final BlockData[] pd = new BlockData[res.palette.size()];
+        Set<String> bad = new LinkedHashSet<>();
+        pd[1] = Material.AIR.createBlockData();
+        for (int i = 2; i < pd.length; i++) {
+            String state = res.palette.get(i);
+            int b = state.indexOf('[');
+            String base = b < 0 ? state : state.substring(0, b);
+            Material m = Material.matchMaterial(base);
+            if (m == null || !m.isBlock() || BANNED.contains(m)) { bad.add(base); continue; }
+            try {
+                pd[i] = Bukkit.createBlockData("minecraft:" + state);
+            } catch (Exception e) {
+                try { pd[i] = m.createBlockData(); bad.add(state + " (özellikler yok sayıldı)"); }
+                catch (Exception e2) { bad.add(base); }
+            }
+        }
+        if (!bad.isEmpty()) {
+            String s = String.join(", ", bad);
+            pl.bot.say("Geçersiz/yasaklı blok atlandı: " + (s.length() > 200 ? s.substring(0, 200) + "..." : s));
+            pl.getLogger().warning("Atlanan bloklar: " + s);
+        }
+        for (String w : res.warnings) pl.getLogger().warning("Expander: " + w);
+
+        pl.bot.say(message + " (" + res.solidCount + " blok)");
 
         World w = o.getWorld();
         int ox = o.getBlockX(), oy = o.getBlockY(), oz = o.getBlockZ();
         int per = pl.getConfig().getInt("blocks-per-tick", 400);
-        current = new ArrayList<>(blocks.size());
+        int scanMax = Math.max(per * 40, 20000);
+        current = new ArrayList<>();
         curWorld = w;
         curOwner = p.getUniqueId();
         pl.bot.building = true;
-        Iterator<P> it = blocks.iterator();
-        int total = blocks.size();
+        final int total = res.n;
         task = new BukkitRunnable() {
-            int done = 0, lastPct = 0;
+            int idx = 0, lastPct = 0;
             public void run() {
                 Location last = null;
-                for (int n = 0; n < per && it.hasNext(); n++) {
-                    P q = it.next();
-                    done++;
-                    int y = oy + q.y();
+                int placed = 0, scanned = 0;
+                while (idx < total && placed < per && scanned < scanMax) {
+                    int i = idx++;
+                    scanned++;
+                    BlockData d = pd[res.pi[i]];
+                    if (d == null) continue;
+                    int y = oy + res.ys[i];
                     if (y < w.getMinHeight() || y >= w.getMaxHeight()) continue;
-                    Block b = w.getBlockAt(ox + q.x(), y, oz + q.z());
-                    current.add(new U(b.getX(), b.getY(), b.getZ(), b.getBlockData()));
-                    b.setType(q.m(), false);
-                    last = b.getLocation();
+                    Block b = w.getBlockAt(ox + res.xs[i], y, oz + res.zs[i]);
+                    BlockData old = b.getBlockData();
+                    if (old.equals(d)) continue;
+                    current.add(new U(b.getX(), b.getY(), b.getZ(), old));
+                    b.setBlockData(d, false);
+                    placed++;
+                    if (!d.getMaterial().isAir()) last = b.getLocation();
                 }
                 if (last != null) pl.bot.moveTo(last.add(0.5, 3, 0.5));
-                int pct = done * 100 / total;
+                int pct = (int) ((long) idx * 100 / Math.max(1, total));
                 if (pct >= lastPct + 25 && pct < 100) { lastPct = pct; pl.bot.say("İnşaat %" + pct + "..."); }
-                if (!it.hasNext()) { finish(true); cancel(); }
+                if (idx >= total) { finish(true); cancel(); }
             }
         }.runTaskTimer(pl, 0, 1);
     }
@@ -97,45 +141,5 @@ public class Builder {
                 if (!it.hasPrevious()) { task = null; pl.bot.building = false; pl.bot.say("Son inşaat geri alındı."); cancel(); }
             }
         }.runTaskTimer(pl, 0, 1);
-    }
-
-    // ---------- Op -> blok listesi ----------
-    private List<P> expand(List<Op> ops, int max) {
-        List<P> out = new ArrayList<>();
-        for (Op op : ops) {
-            Material m = op.t().equals("clear") ? Material.AIR : Material.matchMaterial(op.m());
-            if (m == null || !m.isBlock() || BANNED.contains(m)) continue;
-            int x1 = Math.min(op.x1(), op.x2()), x2 = Math.max(op.x1(), op.x2());
-            int y1 = Math.min(op.y1(), op.y2()), y2 = Math.max(op.y1(), op.y2());
-            int z1 = Math.min(op.z1(), op.z2()), z2 = Math.max(op.z1(), op.z2());
-            switch (op.t()) {
-                case "set" -> out.add(new P(op.x1(), op.y1(), op.z1(), m));
-                case "fill", "clear" -> {
-                    for (int y = y1; y <= y2; y++) for (int x = x1; x <= x2; x++) for (int z = z1; z <= z2; z++) {
-                        if (out.size() >= max) return out;
-                        out.add(new P(x, y, z, m));
-                    }
-                }
-                case "hollow" -> {
-                    for (int y = y1; y <= y2; y++) for (int x = x1; x <= x2; x++) for (int z = z1; z <= z2; z++) {
-                        if (x != x1 && x != x2 && y != y1 && y != y2 && z != z1 && z != z2) continue;
-                        if (out.size() >= max) return out;
-                        out.add(new P(x, y, z, m));
-                    }
-                }
-                case "cyl" -> {
-                    int r = Math.max(1, op.r()), h = Math.max(1, op.y2());
-                    int outer = r * r + r, inner = (r - 1) * (r - 1) + (r - 1);
-                    for (int y = op.y1(); y < op.y1() + h; y++) for (int dx = -r; dx <= r; dx++) for (int dz = -r; dz <= r; dz++) {
-                        int d = dx * dx + dz * dz;
-                        if (d > outer || (op.hollow() && d <= inner)) continue;
-                        if (out.size() >= max) return out;
-                        out.add(new P(op.x1() + dx, y, op.z1() + dz, m));
-                    }
-                }
-                default -> {}
-            }
-        }
-        return out;
     }
 }
