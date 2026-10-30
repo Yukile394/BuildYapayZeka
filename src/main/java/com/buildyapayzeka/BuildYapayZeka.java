@@ -50,8 +50,7 @@ public class BuildYapayZeka extends JavaPlugin {
         if (a[0].equalsIgnoreCase("geri")) { builder.undo(p); return true; }
         if (a[0].equalsIgnoreCase("iptal")) { builder.cancel(); return true; }
         if (a[0].equalsIgnoreCase("durum")) {
-            bot.say("API anahtarı: " + (ai.hasKey() ? "VAR (yapay zeka kullanılacak)" : "YOK (ücretsiz üretici kullanılır)")
-                    + " | model: " + getConfig().getString("model", "claude-sonnet-5-5")
+            bot.say("API anahtarı: " + (ai.hasKey() ? "VAR (" + ai.provider() + ")" : "YOK (ücretsiz üretici kullanılır)")
                     + " | max-zones: " + getConfig().getInt("max-zones", 8)
                     + " | fallback-templates: " + getConfig().getBoolean("fallback-templates", false));
             return true;
@@ -97,4 +96,4 @@ public class BuildYapayZeka extends JavaPlugin {
         if (!s.isOp() || a.length != 1) return List.of();
         return c.getName().equals("buildyapayzeka") ? List.of("aktif", "kapat") : List.of("geri", "iptal", "durum");
     }
-                            }
+}
