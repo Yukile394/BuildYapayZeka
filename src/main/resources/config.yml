@@ -1,8 +1,10 @@
 # Anthropic API anahtarı (opsiyonel). BOŞSA ücretsiz üretici kullanılır: /bot spawn | arena | 1v1 | ada | kale
 anthropic-api-key: ""
 # Sağlayıcı: auto = Claude anahtarı varsa Claude, yoksa Gemini. Zorlamak için "gemini" veya "anthropic".
-provider: auto
+provider: gemini
 # ÜCRETSİZ: aistudio.google.com/apikey adresinden alınan Gemini anahtarı (kartsız)
+# GitHub'a push etme! Anahtarı sadece sunucudaki plugins/BuildYapayZeka/config.yml içine yaz
+# ya da sunucuda GEMINI_API_KEY ortam değişkeni olarak tanımla.
 gemini-api-key: ""
 gemini-models: ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash"]   # sırayla denenir (biri 404/limit verirse sıradaki)
 gemini-min-gap-ms: 7000          # istekler arası bekleme (ücretsiz limit ~10 istek/dk)
