@@ -47,9 +47,20 @@ public class BuildYapayZeka extends JavaPlugin {
 
         // /bot
         if (!bot.active()) { p.sendMessage("§cÖnce /BuildYapayZeka aktif yaz."); return true; }
-        if (a.length == 0) { p.sendMessage("§e/bot <ne inşa edeyim?> | geri | iptal | durum"); return true; }
+        if (a.length == 0) { p.sendMessage("§e/bot <ne inşa edeyim?> | geri | iptal | durum | anahtar <key>"); return true; }
         if (a[0].equalsIgnoreCase("geri")) { builder.undo(p); return true; }
         if (a[0].equalsIgnoreCase("iptal")) { builder.cancel(); return true; }
+        if (a[0].equalsIgnoreCase("anahtar")) {
+            // /bot anahtar <gemini-key>  -> anahtari repoya degil, sunucudaki config.yml'ye yazar
+            if (a.length < 2) { p.sendMessage("§e/bot anahtar <gemini-anahtarı>  (sunucudaki config.yml'ye kaydeder)"); return true; }
+            String k = a[1].trim().replace("\"", "").replace("'", "");
+            if (k.length() < 20) { p.sendMessage("§cAnahtar çok kısa görünüyor, tam anahtarı yapıştır."); return true; }
+            getConfig().set("gemini-api-key", k);
+            getConfig().set("provider", "gemini");
+            saveConfig();
+            bot.say("Gemini anahtarı sunucu config'ine kaydedildi. Kontrol: /bot durum");
+            return true;
+        }
         if (a[0].equalsIgnoreCase("durum")) {
             bot.say(ai.diagnose()
                     + " | max-zones: " + getConfig().getInt("max-zones", 8)
@@ -95,6 +106,6 @@ public class BuildYapayZeka extends JavaPlugin {
     @Override
     public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a) {
         if (!s.isOp() || a.length != 1) return List.of();
-        return c.getName().equals("buildyapayzeka") ? List.of("aktif", "kapat") : List.of("geri", "iptal", "durum");
+        return c.getName().equals("buildyapayzeka") ? List.of("aktif", "kapat") : List.of("geri", "iptal", "durum", "anahtar");
     }
 }
