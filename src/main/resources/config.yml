@@ -1,4 +1,4 @@
-# Anthropic API anahtarı. BOŞSA hazır şablonlar kullanılır ve her istekte AYNI yapı çıkar!
+# Anthropic API anahtarı (opsiyonel). BOŞSA ücretsiz üretici kullanılır: /bot spawn | arena | 1v1 | ada | kale
 anthropic-api-key: ""
 model: "claude-sonnet-5-5"       # daha kaliteli: "claude-opus-5-5" (daha yavaş/pahalı)
 bot-name: "BuildYapayZeka"
@@ -11,7 +11,7 @@ max-ops-per-zone: 450            # bölge başına komut sınırı
 max-ops: 4000                    # toplam komut sınırı
 max-tokens: 16000                # bölge başına cevap uzunluğu
 auto-clear: true                 # inşaat alanını (y>=1) önce temizle
-fallback-templates: false        # AI hata verirse sabit şablon kurulsun mu? (false = hiçbir şey kurma, hatayı göster)
+fallback-templates: false        # AI hata verirse ücretsiz üretici kurulsun mu? (false = hiçbir şey kurma, hatayı göster)
 
 # --- İnşaat ---
 blocks-per-tick: 400
