@@ -18,7 +18,8 @@ public class BuildYapayZeka extends JavaPlugin {
         bot = new BotManager(this);
         builder = new Builder(this);
         ai = new AIClient(this);
-        if (!ai.hasKey()) getLogger().info("anthropic-api-key boş: API'siz üretici kullanılacak (spawn, arena, 1v1, ada, kale).");
+        if (!ai.hasKey()) getLogger().info("API anahtarı bulunamadı (gemini-api-key / anthropic-api-key boş): API'siz üretici kullanılacak.");
+        else getLogger().info("AI hazır -> " + ai.provider());
     }
 
     @Override public void onDisable() { if (bot != null) bot.deactivate(); }
@@ -50,7 +51,7 @@ public class BuildYapayZeka extends JavaPlugin {
         if (a[0].equalsIgnoreCase("geri")) { builder.undo(p); return true; }
         if (a[0].equalsIgnoreCase("iptal")) { builder.cancel(); return true; }
         if (a[0].equalsIgnoreCase("durum")) {
-            bot.say("API anahtarı: " + (ai.hasKey() ? "VAR (" + ai.provider() + ")" : "YOK (ücretsiz üretici kullanılır)")
+            bot.say(ai.diagnose()
                     + " | max-zones: " + getConfig().getInt("max-zones", 8)
                     + " | fallback-templates: " + getConfig().getBoolean("fallback-templates", false));
             return true;
