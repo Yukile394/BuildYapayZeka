@@ -1,17 +1,23 @@
 # Anthropic API anahtarı (opsiyonel). BOŞSA ücretsiz üretici kullanılır: /bot spawn | arena | 1v1 | ada | kale
 anthropic-api-key: ""
+# Sağlayıcı: auto = Claude anahtarı varsa Claude, yoksa Gemini. Zorlamak için "gemini" veya "anthropic".
+provider: auto
+# ÜCRETSİZ: aistudio.google.com/apikey adresinden alınan Gemini anahtarı (kartsız)
+gemini-api-key: ""
+gemini-models: ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash"]   # sırayla denenir (biri 404/limit verirse sıradaki)
+gemini-min-gap-ms: 7000          # istekler arası bekleme (ücretsiz limit ~10 istek/dk)
 model: "claude-sonnet-5-5"       # daha kaliteli: "claude-opus-5-5" (daha yavaş/pahalı)
 bot-name: "BuildYapayZeka"
 bot-skin: "Notch"                # Mannequin olmayan sürümlerde kafa skini
 
 # --- Yapay zeka planlama ---
-max-zones: 8                     # mimar en fazla kaç bölge planlasın (çok = daha detaylı, daha pahalı)
-zones-parallel: 3                # aynı anda kaç bölge üretilsin (429 hatası alırsan 1-2 yap)
+max-zones: 5                     # mimar en fazla kaç bölge planlasın (çok = daha detaylı, daha pahalı)
+zones-parallel: 1                # aynı anda kaç bölge üretilsin (429 hatası alırsan 1-2 yap)
 max-ops-per-zone: 450            # bölge başına komut sınırı
 max-ops: 4000                    # toplam komut sınırı
 max-tokens: 16000                # bölge başına cevap uzunluğu
 auto-clear: true                 # inşaat alanını (y>=1) önce temizle
-fallback-templates: false        # AI hata verirse ücretsiz üretici kurulsun mu? (false = hiçbir şey kurma, hatayı göster)
+fallback-templates: false        # AI hata verirse sabit şablon kurulsun mu? (false = hiçbir şey kurma, hatayı göster)
 
 # --- İnşaat ---
 blocks-per-tick: 400
